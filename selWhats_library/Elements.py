@@ -1,0 +1,8 @@
+# NEW_CHAT_ELEMENT = '//*[@id="app"]/div/div[3]/div/div[3]/header/header/div/span/div/div[1]/button'
+NEW_CHAT_ELEMENT = '//*[@data-icon="new-chat-outline"]'
+NUMBER_BOX = '//*[@id="app"]/div/div[3]/div/div[2]/div[1]/span/div/span/div/div/div[2]/div[2]/div[1]/div'
+MESSAGE_BOX = '//*[@id="app"]/div/div[3]/div/div[4]/div/footer/div/div/span/div/div[2]/div[1]/div[2]/div[1]/p'
+CAPTION_BOX = '//*[@id="app"]/div/div[3]/div/div[2]/div[2]/span/div/div/div/div[2]/div/div[1]/div[3]/div/div/div[1]/div[@contenteditable="true" and @role="textbox"]'
+NO_CHAT_FOUND = '//span[contains(text(),"No results found for ") and @dir="auto"]'
+HEADER_BACK = '//header/div[1]/div[1]/div[1]/span[@data-icon="back"]'
+# HEADER_BACK = '//*[@id="app"]/div/div[3]/div/div[2]/div[1]/span/div/span/div/header/div/div[1]/div/span[@data-icon="back"]'
