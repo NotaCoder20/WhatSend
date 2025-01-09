@@ -6,3 +6,5 @@ CAPTION_BOX = '//*[@id="app"]/div/div[3]/div/div[2]/div[2]/span/div/div/div/div[
 NO_CHAT_FOUND = '//span[contains(text(),"No results found for ") and @dir="auto"]'
 HEADER_BACK = '//header/div[1]/div[1]/div[1]/span[@data-icon="back"]'
 # HEADER_BACK = '//*[@id="app"]/div/div[3]/div/div[2]/div[1]/span/div/span/div/header/div/div[1]/div/span[@data-icon="back"]'
+NEW_CHAT = '//*[@id="app"]/div/div[3]/div/div[2]/div[1]/span/div/span/div/div[2]/div/div/div/div[2]/div/div/div[1]/div/div'
+CONTACT_BOX = '//*[@id="side"]/div[1]/div/div[2]/div[2]/div/div'
