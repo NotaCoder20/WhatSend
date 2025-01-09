@@ -2,8 +2,10 @@ import logging
 import time
 import timeit
 
-from selWhats_library import Elements, colored_log, WebDriver
-from selWhats_library.WebDriver import WebDriver, WebElement
+import colored_log
+import Elements
+import WebDriver
+from selWhats_library.WebDriver import WebElement
 
 
 class WhatSend:
@@ -11,8 +13,8 @@ class WhatSend:
     webDriver = None
     log = colored_log.getLogger(__name__, level=logging.DEBUG)
 
-    def __init__(self, chrome_path, chrome_profile_path):
-        self.webDriver = WebDriver(chrome_path, chrome_profile_path)
+    def __init__(self, chrome_path: str, chrome_profile_path: str):
+        self.webDriver = WebDriver.getWebDriver(chrome_path, chrome_profile_path)
         self.webDriver.startDriver(self.LINK)
         time.sleep(5)
 
@@ -40,15 +42,14 @@ class WhatSend:
 
         return self.sendText(message)
 
-    def sendText(self, message) -> bool:
+    def sendText(self, message: str) -> bool:
         message_box = self.getWebElement(Elements.MESSAGE_BOX)
-        self.webDriver.sendText(Elements.MESSAGE_BOX, message)
         self.typeText(Elements.MESSAGE_BOX, message)
         self.webDriver.pressEnter(message_box)
         time.sleep(0.1)
         return True
 
-    def typeText(self, path, text):
+    def typeText(self, path: str, text: str):
         self.webDriver.sendText(path, text)
 
     def clickElement(self, path: str, timeout=10):
@@ -70,7 +71,7 @@ class WhatSend:
     def testTime(self, number=1):
         def send_message():
             self.sendMessageToNewChat("9082974811", "Test new Chat")
-            self.sendMessageToContact("Kevin Dedhia", "Test Contact")
+            # self.sendMessageToContact("Kevin Dedhia", "Test Contact")
 
         execution_time = timeit.timeit(send_message, number=number)
         print(f"Execution time: {execution_time} seconds")
@@ -81,11 +82,4 @@ if __name__ == '__main__':
     chrome_profile_path1 = r'C:\\Users\\kevin\\AppData\\Local\\Google\\Chrome\\User Data\\'
     whatsapp = WhatSend(chrome_path1, chrome_profile_path1)
     time.sleep(5)
-    for i in range(10):
-        whatsapp.sendMessageToNewChat("9082974811", "Test new Chat")
-        whatsapp.sendMessageToContact("Sbham", "Test Contact")
-        whatsapp.sendMessageToNewChat("9082974812", "Test new Chat")
-        whatsapp.sendMessageToContact("Shubham", "Test Contact")
-
-
-    # whatsapp.testTime(10)
+    whatsapp.testTime(10)

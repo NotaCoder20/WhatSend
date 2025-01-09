@@ -16,8 +16,6 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
-WebElement = WebElement
-
 
 class WebDriverError(Exception):
     """Custom exception for WebDriver-related errors."""
@@ -138,3 +136,7 @@ class WebDriver:
     def __del__(self):
         if self.web_driver:
             self.stopDriver()
+
+
+def getWebDriver(chrome_path: str, chrome_profile_path: str) -> WebDriver:
+    return WebDriver(chrome_path, chrome_profile_path)
