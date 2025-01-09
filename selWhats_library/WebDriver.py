@@ -61,6 +61,9 @@ class WebDriver:
         options.add_argument(f'--profile-directory=Default')
         return options
 
+    def clickElement(self, path, timeout=10):
+        self.wait_for_element(path, timeout=timeout).click()
+
     def stopDriver(self):
         if self.web_driver:
             self.log.info("Stopping Driver")
@@ -113,8 +116,9 @@ class WebDriver:
             self.log.error(e.__cause__)
             raise WebDriverError(f"Failed to establish connection with Chrome. {e.__cause__}")
 
-    def sendText(self, web_element: WebElement, text: str):
+    def sendText(self, path: str, text: str):
         try:
+            web_element = self.wait_for_element(path)
             pyperclip.copy(text)
             web_element.click()
             act = ActionChains(self.web_driver)
