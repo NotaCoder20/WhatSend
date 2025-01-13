@@ -22,16 +22,21 @@ class WhatSend:
         if self.webDriver:
             self.webDriver.stopDriver()
 
-    def sendMessageToNewChat(self, number: str, message: str) -> bool:
+    def sendMessageToNewChat(self, number: str, message: str, file=None) -> bool:
 
         self.clickElement(Elements.NEW_CHAT_ELEMENT)
-        return self.sendMessage(Elements.NUMBER_BOX, Elements.NEW_CHAT, number, message, Elements.HEADER_BACK)
+        return self.sendMessage(Elements.NUMBER_BOX,
+                                Elements.NEW_CHAT,
+                                number, message,
+                                Elements.HEADER_BACK,
+                                file=file)
 
-    def sendMessageToContact(self, name: str, message: str) -> bool:
+    def sendMessageToContact(self, name: str, message: str, file=None) -> bool:
 
-        return self.sendMessage(Elements.CONTACT_BOX, f'//*[@title="{name}"]', name, message)
+        return self.sendMessage(Elements.CONTACT_BOX, f'//*[@title="{name}"]', name, message, file=file)
 
-    def sendMessage(self, search_box_path: str, chat_path: str, name: str, message: str, press_back=None) -> bool:
+    def sendMessage(self,
+                    search_box_path: str, chat_path: str, name: str, message: str, press_back=None, file=None) -> bool:
         self.typeText(search_box_path, name)
         time.sleep(0.1)
 
@@ -39,6 +44,17 @@ class WhatSend:
             if press_back:
                 self.clickElement(press_back)
             return False
+
+        time.sleep(1)
+        if file:
+            self.typeText(Elements.MESSAGE_BOX, message)
+            self.clickElement(Elements.ATTACH_BNT)
+            self.getWebElement(Elements.IMG_BNT)
+            self.log.info(file)
+            self.webDriver.attachFile(Elements.IMG_INPUT, file)
+            time.sleep(0.5)
+            self.clickElement(Elements.SEND_BNT)
+            return True
 
         return self.sendText(message)
 
@@ -71,7 +87,18 @@ class WhatSend:
     def testTime(self, number=1):
         def send_message():
             self.sendMessageToNewChat("9082974811", "Test new Chat")
-            # self.sendMessageToContact("Kevin Dedhia", "Test Contact")
+            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+
+            self.sendMessageToContact("Kevin Dedhia", "Test Contact")
 
         execution_time = timeit.timeit(send_message, number=number)
         print(f"Execution time: {execution_time} seconds")

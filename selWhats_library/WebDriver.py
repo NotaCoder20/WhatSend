@@ -60,7 +60,14 @@ class WebDriver:
         return options
 
     def clickElement(self, path, timeout=10):
-        self.wait_for_element(path, timeout=timeout).click()
+        for _ in range(3):
+            try:
+                self.wait_for_element(path, timeout=timeout).click()
+                return
+            except Exception as e:
+                self.log.warning(e)
+                time.sleep(0.5)
+        self.log.error(f"Cannot Click {path}")
 
     def stopDriver(self):
         if self.web_driver:
@@ -126,9 +133,16 @@ class WebDriver:
             self.log.error(f"Failed to send text: {e}")
             raise WebDriverError(f"Failed to send text: {e}")
 
-    def attachFile(self, web_element: WebElement, filePath: str):
+    def attachFile(self, elementPath: str, filePath: str):
         self.web_driver.file_detector = LocalFileDetector()
-        web_element.send_keys(filePath)
+        files = filePath.split(" ")
+        fileInput = self.web_driver.find_element(By.XPATH, elementPath)
+        for file in files:
+            self.log.DEBUG(file)
+            fileInput.send_keys(file)
+            time.sleep(0.5)
+            fileInput = self.web_driver.find_element(By.XPATH, '//input[@accept="*"]')
+            time.sleep(0.5)
 
     def pressEnter(self, web_element: WebElement):
         web_element.send_keys(Keys.ENTER)
