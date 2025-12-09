@@ -16,6 +16,9 @@ from selenium.webdriver.remote.webelement import WebElement
 from selenium.webdriver.support.wait import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 
+import win32gui
+import win32con
+
 
 class WebDriverError(Exception):
     """Custom exception for WebDriver-related errors."""
@@ -60,14 +63,17 @@ class WebDriver:
         return options
 
     def clickElement(self, path, timeout=10):
-        for _ in range(3):
-            try:
-                self.wait_for_element(path, timeout=timeout).click()
-                return
-            except Exception as e:
-                self.log.warning(e)
-                time.sleep(0.5)
-        self.log.error(f"Cannot Click {path}")
+        try:
+            print("Time Start")
+            element = self.wait_for_element(path, timeout=timeout, attempts=3)
+            time.sleep(0.2)
+            element.click()
+            return
+        except Exception as e:
+            self.log.error(f"Cannot Click {path} for error {e}")
+            time.sleep(0.5)
+
+
 
     def stopDriver(self):
         if self.web_driver:
@@ -75,20 +81,22 @@ class WebDriver:
             self.web_driver.quit()
             self.web_driver = self.web_driver.quit()
 
-    def wait_for_element(self, xpath: str, timeout=20) -> WebElement:
+    def wait_for_element(self, xpath: str, timeout=20, attempts=1) -> WebElement:
         waitTime = 0
         backoff_time = 0.05  # Initial wait time in seconds
         attempt = 0
-        while attempt < 1:
+        while attempt < attempts:
             try:
                 return WebDriverWait(self.web_driver, timeout).until(EC.element_to_be_clickable((By.XPATH, xpath)))
             except Exception as _:
-                time.sleep(backoff_time)
-                waitTime += backoff_time + timeout
-                backoff_time *= 2  # Exponential backoff
-                attempt += 1
-        waitTime = timeout * 3 + 3.5
-        self.log.debug(f"Element with xpath '{xpath}' not clickable after {waitTime} seconds.")
+                waitTime += timeout
+                self.log.warning(f"Element with xpath '{xpath}' not clickable after {waitTime} seconds Attempt : {attempt + 1}.")
+                if not (attempts > 1 and attempts == attempt):
+                    time.sleep(backoff_time)
+                    waitTime += backoff_time
+                    backoff_time *= 2  # Exponential backoff
+                    attempt += 1
+
         raise TimeoutError(f"Element with xpath '{xpath}' not clickable after {waitTime} seconds.")
 
     def checkConnection(self):
@@ -136,13 +144,35 @@ class WebDriver:
     def attachFile(self, elementPath: str, filePath: str):
         self.web_driver.file_detector = LocalFileDetector()
         files = filePath.split(" ")
-        fileInput = self.web_driver.find_element(By.XPATH, elementPath)
+        first = True
+        i = 0
         for file in files:
-            self.log.DEBUG(file)
-            fileInput.send_keys(file)
+            if not first:
+                self.clickElement(elementPath)
+                print("Attatch button clicked")
+            first = False
             time.sleep(0.5)
-            fileInput = self.web_driver.find_element(By.XPATH, '//input[@accept="*"]')
+            self.log.info(f"Attatching files {i}")
+            self.attachFileUI(file)
+            i += 1
             time.sleep(0.5)
+
+
+    def attachFileUI(self, filePath: str):
+        hdlg = 0
+        while hdlg == 0:
+            hdlg = win32gui.FindWindow(None, "Open")
+
+        time.sleep(1)
+        hwnd = win32gui.FindWindowEx(hdlg, 0, 'ComboBoxEx32', None)
+        hwnd = win32gui.FindWindowEx(hwnd, 0, 'ComboBox', None)
+        hwnd = win32gui.FindWindowEx(hwnd, 0, 'Edit', None)
+        win32gui.SendMessage(hwnd, win32con.WM_SETTEXT, None, filePath)
+
+        hwnd = win32gui.FindWindowEx(hdlg, 0, 'Button', '&Open')
+
+        win32gui.SendMessage(hwnd, win32con.BM_CLICK, None, None)
+
 
     def pressEnter(self, web_element: WebElement):
         web_element.send_keys(Keys.ENTER)

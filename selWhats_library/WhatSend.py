@@ -11,7 +11,7 @@ from selWhats_library.WebDriver import WebElement
 class WhatSend:
     LINK = "https://web.whatsapp.com"
     webDriver = None
-    log = colored_log.getLogger(__name__, level=logging.DEBUG)
+    log = colored_log.getLogger(__name__, level=logging.INFO)
 
     def __init__(self, chrome_path: str, chrome_profile_path: str):
         self.webDriver = WebDriver.getWebDriver(chrome_path, chrome_profile_path)
@@ -45,13 +45,13 @@ class WhatSend:
                 self.clickElement(press_back)
             return False
 
-        time.sleep(1)
+        time.sleep(0.5)
         if file:
             self.typeText(Elements.MESSAGE_BOX, message)
             self.clickElement(Elements.ATTACH_BNT)
-            self.getWebElement(Elements.IMG_BNT)
-            self.log.info(file)
-            self.webDriver.attachFile(Elements.IMG_INPUT, file)
+            self.clickElement(Elements.IMG_BNT)
+            self.log.debug(file)
+            self.webDriver.attachFile(Elements.ATTACH_MULTI_BNT, file)
             time.sleep(0.5)
             self.clickElement(Elements.SEND_BNT)
             return True
@@ -71,6 +71,7 @@ class WhatSend:
     def clickElement(self, path: str, timeout=10):
         self.webDriver.clickElement(path, timeout=timeout)
 
+
     def getWebElement(self, path: str, timeout=20) -> WebElement:
         return self.webDriver.wait_for_element(path, timeout=timeout)
 
@@ -79,26 +80,28 @@ class WhatSend:
         try:
             self.clickElement(path, timeout=2)
             self.log.debug(f'Chat Found for {name}')
+
             return True
         except TimeoutError as _:
             self.log.warning(f"Chat Not Found for: {name}")
             return False
 
+
     def testTime(self, number=1):
         def send_message():
-            self.sendMessageToNewChat("9082974811", "Test new Chat")
-            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
-            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
-            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
-            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
-            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
-            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "Test new Chat")
+            # self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Menu.pdf C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
+            # self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Menu.pdf")
             self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Offer.jpeg")
-            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Offer.jpeg")
-            self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
-            self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            # self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            # self.sendMessageToNewChat("9082974811", "Test new Chat", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
+            # self.sendMessageToNewChat("9082974811", "", file="C:\\Users\\kevin\\Downloads\\Offer.jpeg")
 
-            self.sendMessageToContact("Kevin Dedhia", "Test Contact")
+            # self.sendMessageToContact("Kevin Dedhia", "Test Contact")
 
         execution_time = timeit.timeit(send_message, number=number)
         print(f"Execution time: {execution_time} seconds")
@@ -106,7 +109,7 @@ class WhatSend:
 
 if __name__ == '__main__':
     chrome_path1 = r'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-    chrome_profile_path1 = r'C:\\Users\\kevin\\AppData\\Local\\Google\\Chrome\\User Data\\'
+    chrome_profile_path1 = r'C:\\Users\\kevin\\AppData\\Local\\Google\\Chrome\\User Data\\Default'
     whatsapp = WhatSend(chrome_path1, chrome_profile_path1)
     time.sleep(5)
     whatsapp.testTime(10)
