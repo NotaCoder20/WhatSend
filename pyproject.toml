@@ -1,0 +1,23 @@
+[build-system]
+requires = ["setuptools"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "selWhats_library"
+version = "0.0.1"
+description = "Automated WhatsApp Web messaging using Selenium"
+authors = [
+    { name = "Kevin Dedhia" }
+]
+readme = "README.md"
+requires-python = ">=3.8"
+
+dependencies = [
+    "selenium",
+    "requests",
+    "pyperclip",
+    "pywin32"
+]
+
+[tool.setuptools]
+packages = ["selWhats_library"]
