@@ -1,0 +1,6 @@
+selenium>=4.0
+requests>=2.0
+pyperclip>=1.8
+
+[:platform_system == "Windows"]
+pywin32

@@ -2,17 +2,35 @@ import logging
 import time
 import timeit
 
-from selWhats_library import Elements, colored_log, WebDriver
-from selWhats_library.WebDriver import WebDriver, WebElement
+from . import colored_log
+from . import Elements
+from . import WebDriver
+from .WebDriver import WebElement
 
 
-class WhatSend:
+class _WhatSendImpl:
     LINK = "https://web.whatsapp.com"
     webDriver = None
-    log = colored_log.getLogger(__name__, level=logging.DEBUG)
+    log = colored_log.getLogger(__name__, level=logging.INFO)
 
-    def __init__(self, chrome_path, chrome_profile_path):
-        self.webDriver = WebDriver(chrome_path, chrome_profile_path)
+    def __init__(
+            self,
+            chrome_path: str,
+            chrome_profile_path: str,
+            log_level: int | None = None,
+            logger=None,
+            retries: int = 3
+    ) -> None:
+
+        # Use user's logger if provided
+        if logger:
+            self.log = logger
+        else:
+            # otherwise create one with desired log level (default INFO)
+            level = log_level if log_level is not None else colored_log.logging.INFO
+            self.log = colored_log.getLogger(__name__, level=level)
+
+        self.webDriver = WebDriver.getWebDriver(chrome_path, chrome_profile_path, retries=retries)
         self.webDriver.startDriver(self.LINK)
         time.sleep(5)
 
@@ -20,55 +38,110 @@ class WhatSend:
         if self.webDriver:
             self.webDriver.stopDriver()
 
-    def sendMessageToNewChat(self, number: str, message: str) -> bool:
+    def sendMessageToNewChat(self, number: str, message: str, file: str | None = None) -> bool:
 
-        new_chat_button = self.getWebElement(Elements.NEW_CHAT_ELEMENT)
-        new_chat_button.click()
-        time.sleep(0.5)
+        self.clickElement(Elements.NEW_CHAT_ELEMENT)
+        return self.sendMessage(Elements.NUMBER_BOX,
+                                Elements.NEW_CHAT,
+                                number, message,
+                                Elements.HEADER_BACK,
+                                file=file)
 
-        number_box = self.getWebElement(Elements.NUMBER_BOX)
-        number_box.click()
-        self.webDriver.sendText(number_box, number)
-        self.webDriver.pressEnter(number_box)
-        time.sleep(0.7)
+    def sendMessageToContact(self, name: str, message: str, file: str | None = None) -> bool:
 
-        try:
-            self.getWebElement(Elements.NO_CHAT_FOUND, 1)
-            self.log.warning(f"No Chat Found for: {number}")
-            self.getWebElement(Elements.HEADER_BACK).click()
+        return self.sendMessage(Elements.CONTACT_BOX, f'//*[@title="{name}"]', name, message, file=file)
+
+    def sendMessage(self,
+                    search_box_path: str, chat_path: str,
+                    name: str, message: str, press_back=None, file: str | None = None) -> bool:
+        self.webDriver.sendText(search_box_path, name)
+        time.sleep(0.1)
+
+        if not self.findChat(chat_path, name):
+            if press_back:
+                self.clickElement(press_back)
             return False
-        except TimeoutError as _:
-            self.log.debug(f"Chat Found for: {number}")
-            pass
 
-        message_box = self.getWebElement(Elements.MESSAGE_BOX)
-        self.webDriver.sendText(message_box, message)
-        self.webDriver.pressEnter(message_box)
         time.sleep(0.5)
+        if file:
+            self.webDriver.sendText(Elements.MESSAGE_BOX, message)
+            self.clickElement(Elements.ATTACH_BNT)
+            self.clickElement(Elements.IMG_BNT)
+            self.log.debug(file)
+            self.webDriver.attachFile(Elements.ATTACH_MULTI_BNT, file)
+            time.sleep(0.5)
+            self.clickElement(Elements.SEND_BNT)
+            return True
 
+        return self.sendText(message)
+
+    def sendText(self, message: str) -> bool:
+        message_box = self.webDriver.wait_for_element(Elements.MESSAGE_BOX, timeout=20)
+        self.webDriver.sendText(Elements.MESSAGE_BOX, message)
+        self.webDriver.pressEnter(message_box)
+        time.sleep(0.1)
         return True
 
-    def getWebElement(self, path: str, timeout=20) -> WebElement:
-        return self.webDriver.wait_for_element(path, timeout=timeout)
+    def clickElement(self, path: str, timeout=10):
+        self.webDriver.clickElement(path, timeout=timeout)
+
+    def findChat(self, path: str, name: str) -> bool:
+        self.log.debug(path)
+        try:
+            self.clickElement(path, timeout=2)
+            self.log.debug(f'Chat Found for {name}')
+
+            return True
+        except TimeoutError as _:
+            self.log.warning(f"Chat Not Found for: {name}")
+            return False
 
     def testTime(self, number=1):
-        # Create a wrapper function for the method to be timed
         def send_message():
-            self.sendMessageToNewChat("9082974811", "Hey")
+            pass
 
         execution_time = timeit.timeit(send_message, number=number)
         print(f"Execution time: {execution_time} seconds")
 
 
+# -------------------------------------------------
+# PUBLIC API WRAPPER (EXACT SAME PUBLIC METHOD NAMES)
+# -------------------------------------------------
+class WhatSend:
+    """Public API — exposes ONLY the constructor and two main methods."""
+
+    def __init__(
+            self,
+            chrome_path: str,
+            chrome_profile_path: str,
+            log_level: int | None = None,
+            logger=None,
+            retries: int = 3
+    ) -> None:
+
+        self._impl = _WhatSendImpl(
+            chrome_path,
+            chrome_profile_path,
+            log_level=log_level,
+            logger=logger,
+            retries=retries,
+        )
+
+    # ---- EXPOSE ONLY THESE EXACT TWO METHODS ----
+    def sendMessageToNewChat(self, number: str, message: str, file: str | None = None) -> bool:
+        return self._impl.sendMessageToNewChat(number, message, file=file)
+
+    def sendMessageToContact(self, name: str, message: str, file: str | None = None) -> bool:
+        return self._impl.sendMessageToContact(name, message, file=file)
+
+    def __del__(self):
+        try:
+            del self._impl
+        except Exception:
+            pass
+
+
+__all__ = ["WhatSend"]
+
 if __name__ == '__main__':
-    chrome_path1 = r'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-    chrome_profile_path1 = r'C:\\Users\\kevin\\AppData\\Local\\Google\\Chrome\\User Data\\'
-    whatsapp = WhatSend(chrome_path1, chrome_profile_path1)
-    time.sleep(5)
-    # whatsapp.sendMessageToNewChat("9082974811", "Hii")
-    # whatsapp.sendMessageToNewChat("9082974812", "Hii")
-    # whatsapp.sendMessageToNewChat("9082974811", "Hii")
-    # whatsapp.sendMessageToNewChat("9082974812", "Hii")
-    # whatsapp.sendMessageToNewChat("9082974811", "Hii")
-    # whatsapp.sendMessageToNewChat("9082974812", "Hii")
-    whatsapp.testTime(10)
+    pass
