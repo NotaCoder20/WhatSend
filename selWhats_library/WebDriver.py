@@ -5,7 +5,7 @@ import pyperclip
 import requests
 import subprocess
 
-from selWhats_library import colored_log
+from . import colored_log
 
 from selenium import webdriver
 from selenium.webdriver import ActionChains
@@ -30,8 +30,9 @@ class WebDriver:
     chrome_path = None
     chrome_profile_path = None
     web_driver = None
+    retries = 1
 
-    def __init__(self, chrome_path=chrome_path, chrome_profile_path=chrome_profile_path):
+    def __init__(self, chrome_path=chrome_path, chrome_profile_path=chrome_profile_path, retries: int = 1):
 
         if not os.path.exists(chrome_profile_path):
             self.log.error(f"Chrome profile path not found: {chrome_profile_path}. Enter Path For Chrome Profile")
@@ -41,6 +42,7 @@ class WebDriver:
             self.log.error(f"Chrome.exe path not found: {chrome_path}. Enter Path For Chrome.exe Profile")
             raise WebDriverError(f"Chrome.exe path not found: {chrome_path}. Enter Path For Chrome.exe Profile")
 
+        self.retries = retries
         self.chrome_path = chrome_path
         self.chrome_profile_path = chrome_profile_path
 
@@ -65,7 +67,7 @@ class WebDriver:
     def clickElement(self, path, timeout=10):
         try:
             print("Time Start")
-            element = self.wait_for_element(path, timeout=timeout, attempts=3)
+            element = self.wait_for_element(path, timeout=timeout, attempts=max(self.retries, 3))
             time.sleep(0.2)
             element.click()
             return
@@ -73,18 +75,25 @@ class WebDriver:
             self.log.error(f"Cannot Click {path} for error {e}")
             time.sleep(0.5)
 
-
-
     def stopDriver(self):
         if self.web_driver:
-            self.log.info("Stopping Driver")
-            self.web_driver.quit()
-            self.web_driver = self.web_driver.quit()
+            try:
+                self.web_driver.quit()
+            except Exception:
+                self.log.exception("Error when quitting web driver")
+            finally:
+                self.web_driver = None
 
-    def wait_for_element(self, xpath: str, timeout=20, attempts=1) -> WebElement:
+    def wait_for_element(self, xpath: str, timeout=20, attempts: int | None = None) -> WebElement:
+        if not getattr(self, "web_driver", None):
+            raise WebDriverError("WebDriver not started — call startDriver() or ensure Chrome session is running.")
+
         waitTime = 0
         backoff_time = 0.05  # Initial wait time in seconds
         attempt = 0
+        if attempts is None:
+            attempts = getattr(self, "retries", 1)
+
         while attempt < attempts:
             try:
                 return WebDriverWait(self.web_driver, timeout).until(EC.element_to_be_clickable((By.XPATH, xpath)))
@@ -182,5 +191,5 @@ class WebDriver:
             self.stopDriver()
 
 
-def getWebDriver(chrome_path: str, chrome_profile_path: str) -> WebDriver:
-    return WebDriver(chrome_path, chrome_profile_path)
+def getWebDriver(chrome_path: str, chrome_profile_path: str, retries: int = 1) -> WebDriver:
+    return WebDriver(chrome_path, chrome_profile_path, retries=retries)
