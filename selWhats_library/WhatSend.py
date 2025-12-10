@@ -144,8 +144,4 @@ class WhatSend:
 __all__ = ["WhatSend"]
 
 if __name__ == '__main__':
-    chrome_path1 = r'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe'
-    chrome_profile_path1 = r'C:\\Users\\kevin\\AppData\\Local\\Google\\Chrome\\User Data\\Default'
-    whatsapp = WhatSend(chrome_path1, chrome_profile_path1)
-    whatsapp.sendMessageToNewChat("123123", "12321")
-    time.sleep(5)
+    pass
